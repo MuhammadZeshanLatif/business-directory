@@ -25,6 +25,67 @@ import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { Terms } from './components/Terms';
 import './App.css';
 
+function pathToState(pathname: string): { view: PageView; businessId?: string } {
+  if (pathname === '/') return { view: 'home' };
+  if (pathname === '/listings') return { view: 'businesses' };
+  if (pathname === '/my-business') return { view: 'my-business' };
+  if (pathname === '/add-business') return { view: 'add' };
+  if (pathname === '/admin') return { view: 'admin' };
+  if (pathname === '/privacy') return { view: 'privacy' };
+  if (pathname === '/terms') return { view: 'terms' };
+  if (pathname === '/login') return { view: 'login' };
+  if (pathname === '/signup') return { view: 'signup' };
+
+  const detailMatch = pathname.match(/^\/business\/([^/]+)$/);
+  if (detailMatch) {
+    return {
+      view: 'detail',
+      businessId: decodeURIComponent(detailMatch[1])
+    };
+  }
+
+  const editMatch = pathname.match(/^\/edit-business\/([^/]+)$/);
+  if (editMatch) {
+    return {
+      view: 'edit',
+      businessId: decodeURIComponent(editMatch[1])
+    };
+  }
+
+  return { view: 'home' };
+}
+
+function stateToPath(view: PageView, businessId?: string): string {
+  switch (view) {
+    case 'home':
+      return '/';
+    case 'businesses':
+      return '/listings';
+    case 'my-business':
+      return '/my-business';
+    case 'add':
+      return '/add-business';
+    case 'admin':
+      return '/admin';
+    case 'privacy':
+      return '/privacy';
+    case 'terms':
+      return '/terms';
+    case 'login':
+      return '/login';
+    case 'signup':
+      return '/signup';
+    case 'detail':
+      return businessId ? `/business/${encodeURIComponent(businessId)}` : '/listings';
+    case 'edit':
+      return businessId
+        ? `/edit-business/${encodeURIComponent(businessId)}`
+        : '/my-business';
+    default:
+      return '/';
+  }
+}
+
 function App() {
   const withTimeout = async <T,>(
     p: Promise<T>,
@@ -51,10 +112,35 @@ function App() {
   const [listLoading, setListLoading] = useState(isSupabaseConfigured);
   const [listError, setListError] = useState<string | null>(null);
 
-  const [currentView, setView] = useState<PageView>('home');
+  const [currentView, setCurrentView] = useState<PageView>('home');
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
   const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
   const [keywordSearch, setKeywordSearch] = useState<string>('');
+  const setView = useCallback((view: PageView) => {
+    setCurrentView(view);
+  }, []);
+
+  // Initial URL -> state, and back/forward support.
+  useEffect(() => {
+    const applyFromLocation = () => {
+      const parsed = pathToState(window.location.pathname);
+      setCurrentView(parsed.view);
+      if (parsed.businessId) {
+        setSelectedBusinessId(parsed.businessId);
+      }
+    };
+    applyFromLocation();
+    window.addEventListener('popstate', applyFromLocation);
+    return () => window.removeEventListener('popstate', applyFromLocation);
+  }, []);
+
+  // State -> URL (shareable links per page).
+  useEffect(() => {
+    const targetPath = stateToPath(currentView, selectedBusinessId);
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({}, '', targetPath);
+    }
+  }, [currentView, selectedBusinessId]);
 
   const refreshProfile = useCallback(async (uid: string) => {
     if (!supabase) return;
@@ -262,6 +348,9 @@ function App() {
       profile?.role !== 'admin' &&
       session?.user?.id !== activeBusiness.ownerId
     ) {
+      setView('businesses');
+    }
+    if ((currentView === 'detail' || currentView === 'edit') && !selectedBusinessId) {
       setView('businesses');
     }
   }, [
