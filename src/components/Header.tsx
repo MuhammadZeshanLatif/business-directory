@@ -1,6 +1,7 @@
 import React from 'react';
 import { PageView } from '../types';
-import { PlusCircle, Award, LogOut } from 'lucide-react';
+import { PlusCircle, LogOut } from 'lucide-react';
+import logoUrl from '../images/logo.jpeg';
 
 interface HeaderProps {
   currentView: PageView;
@@ -28,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="site-header">
       <div className="header-container">
         <div className="site-logo" style={{ cursor: 'pointer' }} onClick={() => setView('home')}>
-          <Award size={24} /> <span>Local</span>Directory
+          <img src={logoUrl} alt="Local Directory" className="site-logo-img" width={52} height={52} />
         </div>
         <nav className="site-nav">
           <button

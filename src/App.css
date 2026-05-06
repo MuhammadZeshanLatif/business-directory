@@ -109,16 +109,17 @@ ul {
 }
 
 .site-logo {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--text-dark);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
 }
 
-.site-logo span {
-  color: var(--accent-color);
+.site-logo-img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: block;
 }
 
 .site-nav {
