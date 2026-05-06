@@ -1,7 +1,7 @@
 import React from 'react';
 import { PageView } from '../types';
 import { PlusCircle, LogOut } from 'lucide-react';
-import logoUrl from '../images/logo.jpeg';
+import logoUrl from '../images/logo.webp';
 
 interface HeaderProps {
   currentView: PageView;
